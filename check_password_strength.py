@@ -17,20 +17,20 @@ def calculate_charset_length( password):
 
         return charset_length
 
-def calculate_entropy(self, password):
+def calculate_entropy(  password):
         charset_length =  calculate_charset_length(password)
         password_length = len(password)
         entropy = password_length * math.log2(charset_length)
         return entropy
 
-def estimate_crack_time(self, entropy):
+def estimate_crack_time(  entropy):
         # Assume 10 billion guesses per second
         guesses_per_second = 10**10
         total_guesses = 2**entropy
         seconds = total_guesses / guesses_per_second
         return seconds
 
-def human_readable_time(self, seconds):
+def human_readable_time(  seconds):
         intervals = [
             ('year', 60 * 60 * 24 * 365),
             ('month', 60 * 60 * 24 * 30),
@@ -49,7 +49,7 @@ def human_readable_time(self, seconds):
         
         return ', '.join(result) or 'less than a second'
 
-def password_strength_score(self, entropy):
+def password_strength_score(  entropy):
         # Normalizing the entropy to a score between 0 and 1
         max_entropy = 128  # Assuming a max entropy for very strong passwords
         score = min(entropy / max_entropy, 1)

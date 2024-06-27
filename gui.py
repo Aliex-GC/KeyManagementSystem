@@ -10,6 +10,7 @@ from Crypto.Random import get_random_bytes
 import base64
 from key import KeyManagementSystem
 from check_password_strength import analyze_password
+from database import KeyRecord,session
 
 class KeyManagementGUI:
     def __init__(self, root):
@@ -17,7 +18,7 @@ class KeyManagementGUI:
         self.root = root
         self.root.title("Key Management System")
         self.root.geometry("600x600")
-
+        self.session = session
         self.setup_gui()
 
     def setup_gui(self):
@@ -181,18 +182,32 @@ class KeyManagementGUI:
         key = self.key_entry.get()
         password = self.encrypt_password_entry.get()
         encrypted_key = self.kms.encrypt_key(key, password)
+
+        # 将加密后的密钥保存到数据库
+        key_record = KeyRecord(original_key=key, encrypted_key=encrypted_key, password=password)
+        self.session.add(key_record)
+        self.session.commit()
+
         self.encrypted_key_result.delete('1.0', tk.END)
         self.encrypted_key_result.insert(tk.END, encrypted_key)
+        
 
     def decrypt_key(self):
         encrypted_key = self.encrypted_key_entry.get('1.0', tk.END).strip()
         password = self.decrypt_password_entry.get()
-        try:
-            decrypted_key = self.kms.decrypt_key(encrypted_key, password)
-            self.decrypted_key_result.delete('1.0', tk.END)
-            self.decrypted_key_result.insert(tk.END, decrypted_key)
-        except Exception as e:
-            messagebox.showerror("Error", "Decryption failed: " + str(e))
+
+        # 从数据库中查找对应的记录
+        key_record = self.session.query(KeyRecord).filter_by(encrypted_key=encrypted_key, password=password).first()
+        print(key_record)
+        if key_record:
+            try:
+                decrypted_key = self.kms.decrypt_key(encrypted_key, password)
+                self.decrypted_key_result.delete('1.0', tk.END)
+                self.decrypted_key_result.insert(tk.END, decrypted_key)
+            except Exception as e:
+                messagebox.showerror("Error", "Decryption failed: " + str(e))
+        else:
+            messagebox.showerror("Error", "No matching record found in the database")
 
     def generate_key_pair(self):
         private_key, public_key = self.kms.generate_key_pair()

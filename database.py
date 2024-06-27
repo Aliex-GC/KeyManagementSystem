@@ -1,12 +1,21 @@
 from sqlalchemy import create_engine
-engine = create_engine('sqlite:///example.db')
- 
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String
+
+engine = create_engine('sqlite:///key_record.db')
 Base = declarative_base()
-class User(Base):
-    __tablename__ = 'users'
-    
+
+class KeyRecord(Base):
+    __tablename__ = 'key_records'
     id = Column(Integer, primary_key=True)
-    name = Column(String)
-    pas = Column(Integer)
+    original_key = Column(String, nullable=False)
+    encrypted_key = Column(String, nullable=False)
+    password = Column(String, nullable=False)
+
+# # 创建表
+# Base.metadata.create_all(engine)
+
+# # 创建会话
+Session = sessionmaker(bind=engine)
+session = Session()
